@@ -1,0 +1,39 @@
+{
+  "name": "bgsbot-next",
+  "version": "4.0.0",
+  "description": "A Discord bot for Elite Dangerous player groups",
+  "author": {
+    "name": "Sayak Mukhopadhyay",
+    "email": "mukhopadhyaysayak@gmail.com"
+  },
+  "contributors": [
+    {
+      "name": "Sayak Mukhopadhyay",
+      "email": "mukhopadhyaysayak@gmail.com"
+    }
+  ],
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsc",
+    "build:dev": "tsc -w",
+    "start": "node dist/index.js",
+    "start:dev": "nodemon dist/index.js",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
+  },
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.3.1",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.42.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "nodemon": "^3.0.1",
+    "prettier": "^3.0.0",
+    "typescript": "^5.1.3"
+  }
+}
