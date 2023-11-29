@@ -22,11 +22,16 @@
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
   },
   "dependencies": {
+    "axios": "^1.6.2",
     "discord.js": "^14.14.1",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "luxon": "^3.4.4",
+    "mongoose": "^8.0.2",
+    "socket.io-client": "^2.5.0"
   },
   "devDependencies": {
     "@types/node": "^20.3.1",
+    "@types/socket.io": "^2.1.13",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "eslint": "^8.42.0",
