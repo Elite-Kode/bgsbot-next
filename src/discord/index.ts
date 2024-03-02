@@ -75,8 +75,9 @@ export class DiscordClient {
     if (this.adminCommandsMap.has(commandArguments.command) && message.author.id == process.env.BOT_DEVELOPER_USER_ID) {
       await this.adminCommandsMap.get(commandArguments.command).execMessage(message, commandArguments.commandArguments)
       return
+    } else if (this.commandsMap.has(commandArguments.command)) {
+      await this.commandsMap.get(commandArguments.command).execMessage(message, commandArguments.commandArguments)
     }
-    await this.commandsMap.get(commandArguments.command).execMessage(message, commandArguments.commandArguments)
   }
 
   private getCommandArguments(message: Message) {
