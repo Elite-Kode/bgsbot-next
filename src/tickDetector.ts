@@ -1,5 +1,5 @@
 import { Socket } from 'socket.io'
-import io from 'socket.io-client'
+import * as io from 'socket.io-client'
 import { env } from 'node:process'
 import { DateTime } from 'luxon'
 import { ChannelType, Client, EmbedBuilder, GuildBasedChannel, PermissionsBitField } from 'discord.js'
@@ -17,9 +17,9 @@ export class TickDetector {
   }
 
   public async connectSocket() {
+    this.socket = io(this.url)
     this.listenToEvents()
     this.listenToTick()
-    this.socket = io(this.url)
   }
 
   private listenToEvents(): void {
