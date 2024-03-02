@@ -1,9 +1,25 @@
-import { Message } from 'discord.js'
+import {
+  CacheType,
+  ChatInputCommandInteraction,
+  CommandInteractionOptionResolver,
+  Message,
+  SlashCommandBuilder
+} from 'discord.js'
 
 export interface Command {
-  dmAble: boolean
+  name: string
+  description: string
 
-  exec(message: Message, commandArguments: string): void
+  execMessage(message: Message, commandArguments: string): Promise<void>
 
   help(): [string, string, string, string[]]
+}
+
+export interface SlashedCommand extends Command {
+  slash: SlashCommandBuilder
+
+  execInteraction(
+    interaction: ChatInputCommandInteraction,
+    options: Omit<CommandInteractionOptionResolver<CacheType>, 'getMessage' | 'getFocused'>
+  ): Promise<void>
 }

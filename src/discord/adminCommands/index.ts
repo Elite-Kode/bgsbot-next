@@ -1,0 +1,1 @@
+export { RegisterSlashCommands } from './registerSlashCommands'

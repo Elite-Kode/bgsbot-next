@@ -1,17 +1,20 @@
-import { Client, Events, GatewayIntentBits, Message } from 'discord.js'
+import { ChatInputCommandInteraction, Client, Events, GatewayIntentBits, Message } from 'discord.js'
 import { Hi } from './commands'
-import { Command } from '../interfaces/Command'
+import { Command, SlashedCommand } from '../interfaces/Command'
 import { Responses } from './responseDict'
+import { RegisterSlashCommands } from './adminCommands'
 
 export class DiscordClient {
   public client: Client
-  public commandsMap: Map<string, Command>
+  public commandsMap: Map<string, SlashedCommand>
+  public adminCommandsMap: Map<string, Command>
 
   public constructor() {
     this.client = new Client({
       intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]
     })
     this.commandsMap = new Map()
+    this.adminCommandsMap = new Map()
     this.listen()
     this.login()
   }
@@ -28,7 +31,13 @@ export class DiscordClient {
 
     this.client.on(Events.MessageCreate, async message => {
       if (message.mentions.users.has(this.client.user.id)) {
-        this.process(message)
+        this.processMessage(message)
+      }
+    })
+
+    this.client.on(Events.InteractionCreate, interaction => {
+      if (interaction.isChatInputCommand()) {
+        this.processInteractions(interaction)
       }
     })
   }
@@ -36,17 +45,38 @@ export class DiscordClient {
   private initiateCommands(): void {
     const hi = new Hi()
 
-    this.commandsMap.set('hi', hi)
+    this.commandsMap.set(hi.name, hi)
+
+    const registerSlashCommands = new RegisterSlashCommands(
+      this.client.application.id,
+      this.client.rest,
+      this.commandsMap
+    )
+
+    this.adminCommandsMap.set(registerSlashCommands.name, registerSlashCommands)
   }
 
-  private process(message: Message) {
-    const commandArguments = this.getCommandArguments(message)
-    if (this.commandsMap.has(commandArguments.command)) {
-      console.log(commandArguments.command + ' command requested')
-      this.commandsMap.get(commandArguments.command).exec(message, commandArguments.commandArguments)
-    } else {
-      message.channel.send(Responses.getResponse(Responses.NOTACOMMAND))
+  private async processInteractions(interaction: ChatInputCommandInteraction) {
+    if (!this.commandsMap.has(interaction.commandName)) {
+      await interaction.channel.send(Responses.getResponse(Responses.NOTACOMMAND))
+      return
     }
+    console.log(interaction.commandName + ' slash command requested')
+    await this.commandsMap.get(interaction.commandName).execInteraction(interaction, interaction.options)
+  }
+
+  private async processMessage(message: Message) {
+    const commandArguments = this.getCommandArguments(message)
+    if (!this.commandsMap.has(commandArguments.command) && !this.adminCommandsMap.has(commandArguments.command)) {
+      await message.channel.send(Responses.getResponse(Responses.NOTACOMMAND))
+      return
+    }
+    console.log(commandArguments.command + ' command requested')
+    if (this.adminCommandsMap.has(commandArguments.command) && message.author.id == process.env.BOT_DEVELOPER_USER_ID) {
+      await this.adminCommandsMap.get(commandArguments.command).execMessage(message, commandArguments.commandArguments)
+      return
+    }
+    await this.commandsMap.get(commandArguments.command).execMessage(message, commandArguments.commandArguments)
   }
 
   private getCommandArguments(message: Message) {
