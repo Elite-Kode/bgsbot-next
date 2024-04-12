@@ -3,7 +3,8 @@ import {
   ChatInputCommandInteraction,
   CommandInteractionOptionResolver,
   Message,
-  SlashCommandBuilder
+  SlashCommandBuilder,
+  SlashCommandSubcommandsOnlyBuilder
 } from 'discord.js'
 
 export interface Command {
@@ -16,7 +17,7 @@ export interface Command {
 }
 
 export interface SlashedCommand extends Command {
-  slash: SlashCommandBuilder
+  slash: SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder
 
   execInteraction(
     interaction: ChatInputCommandInteraction,

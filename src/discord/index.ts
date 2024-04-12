@@ -1,5 +1,5 @@
 import { ChatInputCommandInteraction, Client, Events, GatewayIntentBits, Message } from 'discord.js'
-import { Hi } from './commands'
+import { Hi, Tick } from './commands'
 import { Command, SlashedCommand } from '../interfaces/Command'
 import { Responses } from './responseDict'
 import { RegisterSlashCommands } from './adminCommands'
@@ -43,9 +43,8 @@ export class DiscordClient {
   }
 
   private initiateCommands(): void {
-    const hi = new Hi()
-
-    this.commandsMap.set(hi.name, hi)
+    this.registerCommand(new Hi())
+    this.registerCommand(new Tick())
 
     const registerSlashCommands = new RegisterSlashCommands(
       this.client.application.id,
@@ -54,6 +53,10 @@ export class DiscordClient {
     )
 
     this.adminCommandsMap.set(registerSlashCommands.name, registerSlashCommands)
+  }
+
+  private registerCommand(cmd: SlashedCommand) {
+    this.commandsMap.set(cmd.name, cmd)
   }
 
   private async processInteractions(interaction: ChatInputCommandInteraction) {

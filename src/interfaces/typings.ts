@@ -7,3 +7,10 @@ export interface IngameIdsSchema {
   station: any
   happiness: any
 }
+
+export type TickType = TickSchema[]
+export interface TickSchema {
+  _id: string
+  time: string
+  updated_at: string
+}
