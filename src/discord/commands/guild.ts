@@ -131,9 +131,9 @@ export class Guild implements SlashedCommand {
 
     if ((kind === 'admin' || !kind) && guild.admin_roles_id.length > 0) {
       fields.push({ name: 'Administrative roles', value: guild.admin_roles_id.map(v => `<@&${v}>`).join('\n') })
-    } else if (kind === 'access' || !kind && guild.access_roles_id.length > 0) {
+    } else if ((kind === 'access' || !kind) && guild.access_roles_id.length > 0) {
       fields.push({ name: 'Access roles', value: guild.access_roles_id.map(v => `<@&${v}>`).join('\n') })
-    } else if (kind === 'forbidden' || !kind && guild.forbidden_roles_id.length > 0) {
+    } else if ((kind === 'forbidden' || !kind) && guild.forbidden_roles_id.length > 0) {
       fields.push({ name: 'Forbidden roles', value: guild.forbidden_roles_id.map(v => `<@&${v}>`).join('\n') })
     }
 
