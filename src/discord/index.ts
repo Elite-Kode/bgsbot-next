@@ -43,8 +43,9 @@ export class DiscordClient {
   }
 
   private initiateCommands(): void {
-    this.registerCommand(new Hi())
-    this.registerCommand(new Tick())
+    const cmds = [new Hi(), new Tick()]
+
+    this.registerCommands(cmds)
 
     const registerSlashCommands = new RegisterSlashCommands(
       this.client.application.id,
@@ -53,6 +54,12 @@ export class DiscordClient {
     )
 
     this.adminCommandsMap.set(registerSlashCommands.name, registerSlashCommands)
+  }
+
+  private registerCommands(cmds: SlashedCommand[]) {
+    for (const cmd of cmds) {
+      this.registerCommand(cmd)
+    }
   }
 
   private registerCommand(cmd: SlashedCommand) {
