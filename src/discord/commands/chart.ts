@@ -26,7 +26,7 @@ export class Chart implements SlashedCommand {
           .setName('tick')
           .setDescription('Show the ticks on a chart')
           .addBooleanOption(option =>
-            option.setName('hide').setDescription('Hide the response for others?').setRequired(true)
+            option.setName('hide').setDescription('Hide the response for others?').setRequired(false)
           )
       )
       .addSubcommand(subCommand =>
@@ -44,7 +44,7 @@ export class Chart implements SlashedCommand {
             option.setName('target').setDescription('Which system to generate the graph for').setRequired(true)
           )
           .addBooleanOption(option =>
-            option.setName('hide').setDescription('Hide the response for others?').setRequired(true)
+            option.setName('hide').setDescription('Hide the response for others?').setRequired(false)
           )
       )
       .addSubcommand(subCommand =>
@@ -66,7 +66,7 @@ export class Chart implements SlashedCommand {
             option.setName('target').setDescription('Which faction to generate the graph for').setRequired(true)
           )
           .addBooleanOption(option =>
-            option.setName('hide').setDescription('Hide the response for others?').setRequired(true)
+            option.setName('hide').setDescription('Hide the response for others?').setRequired(false)
           )
       )
   }
@@ -80,7 +80,7 @@ export class Chart implements SlashedCommand {
     const kind = interaction.options.getSubcommand()
     const filter = interaction.options.getString('filter')
     const name = interaction.options.getString('target')
-    const hide = interaction.options.getBoolean('hide')
+    const hide = interaction.options.getBoolean('hide') ?? false
 
     const urlBase = 'https://elitebgs.app/api/chartgenerator'
 
@@ -114,13 +114,15 @@ export class Chart implements SlashedCommand {
       responseType: 'arraybuffer'
     }
 
+    await interaction.deferReply({ ephemeral: hide })
+
     const response = await axios.get(url, requestOptions)
     if (response.status === 200) {
       const attachment = new AttachmentBuilder(response.data)
-      await interaction.reply({ files: [attachment], ephemeral: hide })
+      await interaction.editReply({ files: [attachment] })
       return
     } else {
-      await interaction.reply({ content: Responses.getResponse(Responses.FAIL), ephemeral: true })
+      await interaction.editReply({ content: Responses.getResponse(Responses.FAIL) })
       return
     }
   }
