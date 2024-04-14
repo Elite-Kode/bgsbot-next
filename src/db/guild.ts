@@ -1,14 +1,15 @@
 import { Document, model, Schema } from 'mongoose'
+import { Guild as DGuild } from 'discord.js'
 
 export interface Guild {
   guild_id: string
   bgs_channel_id: string
-  bgs_role_id: string
   bgs_time: string
   announce_tick: boolean
   sort: string
   sort_order: number
   theme: string
+  access_roles_id: string[]
   admin_roles_id: string[]
   forbidden_roles_id: string[]
   created_at: Date
@@ -38,13 +39,13 @@ export const GuildSchema = new Schema<GuildSchema>({
     unique: true
   },
   bgs_channel_id: String,
-  bgs_role_id: String,
   bgs_time: String,
   announce_tick: Boolean,
   sort: String,
   sort_order: Number, // 1 of increasing and -1 for decreasing and 0 for disable
   theme: String,
   admin_roles_id: [String],
+  access_roles_id: [String],
   forbidden_roles_id: [String],
   created_at: {
     type: Date,
@@ -75,3 +76,20 @@ export const GuildSchema = new Schema<GuildSchema>({
 })
 
 export const GuildModel = model<Guild>('guild', GuildSchema, 'guild')
+
+export async function readGuild(guild: DGuild) {
+  const id = guild.id
+
+  const dbGuild = await GuildModel.findOne({ guild_id: id }).exec()
+
+  if (!dbGuild) {
+    const newGuild = new GuildModel({
+      guild_id: id,
+      updated_at: new Date()
+    })
+    await newGuild.save()
+    return newGuild
+  } else {
+    return dbGuild
+  }
+}

@@ -8,6 +8,7 @@ import {
 import { Responses } from '../responseDict'
 import axios from 'axios'
 import { TickType } from '../../interfaces/typings'
+import { Access, AccessLevel } from '../access'
 
 export class Tick implements SlashedCommand {
   name = 'tick'
@@ -28,9 +29,8 @@ export class Tick implements SlashedCommand {
 
   async execInteraction(interaction: ChatInputCommandInteraction): Promise<void> {
     if (interaction.options.getSubcommand() === 'get') {
-      // await interaction.reply(await this.getTick())
       await interaction.reply({
-        content: await this.getTick(),
+        content: await this.getTick(interaction),
         ephemeral: interaction.options.getBoolean('hide') ?? false
       })
     }
@@ -45,7 +45,11 @@ export class Tick implements SlashedCommand {
     return ['', '', '', []]
   }
 
-  async getTick(): Promise<string> {
+  async getTick(interaction: ChatInputCommandInteraction): Promise<string> {
+    if (!(await Access.has(interaction.user, interaction.guild, AccessLevel.ACCESS))) {
+      return Responses.getResponse(Responses.INSUFFICIENTPERMS)
+    }
+
     const url = 'https://elitebgs.app/api/ebgs/v5/ticks'
 
     const response = await axios.get(url)
