@@ -1,6 +1,7 @@
 import { SlashedCommand } from '../../interfaces/Command'
 import {
-  ChatInputCommandInteraction, EmbedBuilder,
+  ChatInputCommandInteraction,
+  EmbedBuilder,
   Message,
   SlashCommandBuilder,
   SlashCommandSubcommandsOnlyBuilder
@@ -55,6 +56,23 @@ export class Guild implements SlashedCommand {
                   )
               )
           )
+          .addSubcommand(subCommand =>
+            subCommand
+              .setName('remove')
+              .setDescription('Remove a registered role from the bot')
+              .addStringOption(option =>
+                option
+                  .setName('type')
+                  .setDescription('Which type of role is being added?')
+                  .setRequired(true)
+                  .addChoices(
+                    { name: 'Forbidden', value: 'forbidden' },
+                    { name: 'Access', value: 'access' },
+                    { name: 'Admin', value: 'admin' }
+                  )
+              )
+              .addRoleOption(option => option.setName('role').setDescription('The role to remove').setRequired(true))
+          )
       )
   }
 
@@ -70,6 +88,8 @@ export class Guild implements SlashedCommand {
         await interaction.reply({ content: await this.addRole(interaction), ephemeral: true })
       } else if (subcommand === 'list') {
         await interaction.reply({ embeds: [await this.listRoles(interaction)], ephemeral: true })
+      } else if (subcommand === 'remove') {
+        await interaction.reply({ content: await this.removeRole(interaction), ephemeral: true })
       }
     }
   }
@@ -131,9 +151,13 @@ export class Guild implements SlashedCommand {
 
     if ((kind === 'admin' || !kind) && guild.admin_roles_id.length > 0) {
       fields.push({ name: 'Administrative roles', value: guild.admin_roles_id.map(v => `<@&${v}>`).join('\n') })
-    } else if ((kind === 'access' || !kind) && guild.access_roles_id.length > 0) {
+    }
+
+    if ((kind === 'access' || !kind) && guild.access_roles_id.length > 0) {
       fields.push({ name: 'Access roles', value: guild.access_roles_id.map(v => `<@&${v}>`).join('\n') })
-    } else if ((kind === 'forbidden' || !kind) && guild.forbidden_roles_id.length > 0) {
+    }
+
+    if ((kind === 'forbidden' || !kind) && guild.forbidden_roles_id.length > 0) {
       fields.push({ name: 'Forbidden roles', value: guild.forbidden_roles_id.map(v => `<@&${v}>`).join('\n') })
     }
 
@@ -141,8 +165,27 @@ export class Guild implements SlashedCommand {
       fields.push({ name: 'None registered', value: `None registered of kind ${kind}` })
     }
 
+    console.log(fields)
     embed = embed.addFields(fields)
 
     return embed
+  }
+
+  async removeRole(interaction: ChatInputCommandInteraction): Promise<string> {
+    const kind = interaction.options.getString('type')
+    const role = interaction.options.getRole('role')
+    const roleId = role.id
+    const guild = await readGuild(interaction.guild)
+
+    if (kind === 'admin') {
+      if (!guild.admin_roles_id.includes(roleId)) return Responses.getResponse(Responses.IDNOTFOUND)
+
+      await GuildModel.findOneAndUpdate(
+        { guild_id: guild.guild_id },
+        { updated_at: new Date(), $pullAll: { admin_roles_id: [roleId] } }
+      ).exec()
+    }
+
+    return Responses.getResponse(Responses.SUCCESS)
   }
 }
