@@ -2,9 +2,10 @@ import { Guild, User } from 'discord.js'
 import { readGuild } from '../db/guild'
 
 export enum AccessLevel {
-  FORBIDDEN = 0,
-  ACCESS = 1,
-  ADMIN = 2
+  UNKNOWN = 0,
+  FORBIDDEN = 1,
+  ACCESS = 2,
+  ADMIN = 3
 }
 
 export class Access {
@@ -22,16 +23,18 @@ export class Access {
 
     if (member.permissions.has('Administrator')) return AccessLevel.ADMIN
 
-    for (const forbiddenRoleId of dbGuild.forbidden_roles_id) {
-      if (roles.has(forbiddenRoleId)) return AccessLevel.FORBIDDEN
+    for (const roleId of dbGuild.forbidden_roles_id) {
+      if (roles.has(roleId)) return AccessLevel.FORBIDDEN
     }
 
-    for (const adminRoleId of dbGuild.admin_roles_id) {
-      if (roles.has(adminRoleId)) return AccessLevel.ADMIN
+    for (const roleId of dbGuild.admin_roles_id) {
+      if (roles.has(roleId)) return AccessLevel.ADMIN
     }
 
-    for (const accessRoleId of dbGuild.access_roles_id) {
-      if (roles.has(accessRoleId)) return AccessLevel.ACCESS
+    for (const roleId of dbGuild.access_roles_id) {
+      if (roles.has(roleId)) return AccessLevel.ACCESS
     }
+
+    return AccessLevel.UNKNOWN
   }
 }

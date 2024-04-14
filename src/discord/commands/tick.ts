@@ -12,13 +12,13 @@ import { Access, AccessLevel } from '../access'
 
 export class Tick implements SlashedCommand {
   name = 'tick'
-  description = 'Get tick'
+  description = 'Tick information'
   slash: SlashCommandSubcommandsOnlyBuilder
 
   constructor() {
     this.slash = new SlashCommandBuilder()
-      .setName('tick')
-      .setDescription('Tick information')
+      .setName(this.name)
+      .setDescription(this.description)
       .addSubcommand(subCommand =>
         subCommand
           .setName('get')

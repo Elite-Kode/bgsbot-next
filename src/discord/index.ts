@@ -3,6 +3,7 @@ import { Hi, Tick } from './commands'
 import { Command, SlashedCommand } from '../interfaces/Command'
 import { Responses } from './responseDict'
 import { RegisterSlashCommands } from './adminCommands'
+import { Guild } from './commands/guild'
 
 export class DiscordClient {
   public client: Client
@@ -43,9 +44,9 @@ export class DiscordClient {
   }
 
   private initiateCommands(): void {
-    const cmds = [new Hi(), new Tick()]
+    const commands = [new Hi(), new Tick(), new Guild()]
 
-    this.registerCommands(cmds)
+    this.registerCommands(commands)
 
     const registerSlashCommands = new RegisterSlashCommands(
       this.client.application.id,
