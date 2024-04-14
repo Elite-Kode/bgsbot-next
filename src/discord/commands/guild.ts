@@ -74,6 +74,18 @@ export class Guild implements SlashedCommand {
               .addRoleOption(option => option.setName('role').setDescription('The role to remove').setRequired(true))
           )
       )
+      .addSubcommand(subCommand =>
+        subCommand
+          .setName('theme')
+          .setDescription('Change the theme used in graphs')
+          .addStringOption(option =>
+            option
+              .setName('theme')
+              .setDescription('The theme used')
+              .setRequired(true)
+              .addChoices({ name: 'Dark', value: 'dark' }, { name: 'Light', value: 'light' })
+          )
+      )
   }
 
   async execInteraction(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -82,15 +94,19 @@ export class Guild implements SlashedCommand {
       return
     }
 
-    if (interaction.options.getSubcommandGroup() === 'role') {
-      const subcommand = interaction.options.getSubcommand()
-      if (subcommand === 'add') {
+    const subCommand = interaction.options.getSubcommand()
+    const subCommandGroup = interaction.options.getSubcommandGroup()
+
+    if (subCommandGroup === 'role') {
+      if (subCommand === 'add') {
         await interaction.reply({ content: await this.addRole(interaction), ephemeral: true })
-      } else if (subcommand === 'list') {
+      } else if (subCommand === 'list') {
         await interaction.reply({ embeds: [await this.listRoles(interaction)], ephemeral: true })
-      } else if (subcommand === 'remove') {
+      } else if (subCommand === 'remove') {
         await interaction.reply({ content: await this.removeRole(interaction), ephemeral: true })
       }
+    } else if (subCommand === 'theme') {
+      await interaction.reply({ content: await this.changeTheme(interaction), ephemeral: true })
     }
   }
 
@@ -184,6 +200,17 @@ export class Guild implements SlashedCommand {
         { guild_id: guild.guild_id },
         { updated_at: new Date(), $pullAll: { admin_roles_id: [roleId] } }
       ).exec()
+    }
+
+    return Responses.getResponse(Responses.SUCCESS)
+  }
+
+  async changeTheme(interaction: ChatInputCommandInteraction): Promise<string> {
+    const guild = await readGuild(interaction.guild)
+    const theme = interaction.options.getString('theme')
+
+    if (!(await GuildModel.findOneAndUpdate({ guild_id: guild.guild_id }, { updated_at: new Date(), theme }).exec())) {
+      return Responses.getResponse(Responses.FAIL)
     }
 
     return Responses.getResponse(Responses.SUCCESS)
