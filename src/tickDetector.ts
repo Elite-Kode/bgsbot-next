@@ -1,7 +1,6 @@
 import { Socket } from 'socket.io'
 import * as io from 'socket.io-client'
 import { env } from 'node:process'
-import { DateTime } from 'luxon'
 import { ChannelType, Client, EmbedBuilder, GuildBasedChannel, PermissionsBitField } from 'discord.js'
 import { GuildModel } from './db/guild'
 import { Responses } from './discord/responseDict'
@@ -47,16 +46,19 @@ export class TickDetector {
             if (bgsChannel && bgsChannel.type === ChannelType.GuildText) {
               const flags = PermissionsBitField.Flags
               if (bgsChannel.guild.members.me.permissionsIn(bgsChannel).has(flags.EmbedLinks)) {
-                const lastTickFormattedTime = DateTime(tickTime).utc().format('HH:mm')
-                const lastTickFormattedDate = DateTime(tickTime).utc().format('Do MMM')
+                const formatted = Intl.DateTimeFormat('en', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  day: 'numeric',
+                  month: 'short',
+                  weekday: 'short'
+                }).format(tickTime)
 
                 const embed = new EmbedBuilder()
                   .setTitle('Tick Detected')
                   .setColor([255, 0, 255])
                   .setTimestamp(new Date(tickTime))
-                  .addFields([
-                    { name: 'Latest Tick At', value: lastTickFormattedTime + ' UTC - ' + lastTickFormattedDate }
-                  ])
+                  .addFields([{ name: 'Latest Tick At', value: formatted }])
 
                 bgsChannel.send({ embeds: [embed] })
               } else {
