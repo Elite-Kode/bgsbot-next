@@ -24,7 +24,7 @@ export class Responses {
     "I'm sorry, I'm afraid I can't do that",
     "You can't do this. Ask someone with more permissions"
   ]
-  public static readonly IDNOTFOUND = ['The ID you entered does not exist']
+  public static readonly IDNOTFOUND = ['The ID you entered does not exist', "I couldn't find that"]
   public static readonly NOTATEXTCHANNEL = ['The entered channel is not a text channel. Please enter a text channel']
   public static readonly EMBEDPERMISSION = [
     "I don't have permissions to send a message and/or create an embed and/or attach files in the entered channel. Please assign the permissions to me."

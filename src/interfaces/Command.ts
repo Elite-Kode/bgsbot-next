@@ -17,7 +17,7 @@ export interface Command {
 }
 
 export interface SlashedCommand extends Command {
-  slash: SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder
+  slash: SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder | Omit<SlashCommandBuilder, 'addSubcommand' | 'addSubcommandGroup'>
 
   execInteraction(
     interaction: ChatInputCommandInteraction,
