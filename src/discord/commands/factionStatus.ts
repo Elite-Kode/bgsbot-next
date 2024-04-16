@@ -31,7 +31,7 @@ export class FactionStatus implements SlashedCommand {
   }
 
   async execInteraction(interaction: ChatInputCommandInteraction): Promise<void> {
-    if (!(await Access.has(interaction.user, interaction.guild, AccessLevel.ADMIN))) {
+    if (!(await Access.has(interaction.user, interaction.guild, AccessLevel.ACCESS))) {
       await interaction.reply({ content: Responses.getResponse(Responses.INSUFFICIENTPERMS), ephemeral: true })
       return
     }
