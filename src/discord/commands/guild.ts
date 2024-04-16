@@ -1,5 +1,6 @@
 import { SlashedCommand } from '../../interfaces/Command'
 import {
+  ChannelType,
   ChatInputCommandInteraction,
   EmbedBuilder,
   Message,
@@ -86,6 +87,14 @@ export class Guild implements SlashedCommand {
               .addChoices({ name: 'Dark', value: 'dark' }, { name: 'Light', value: 'light' })
           )
       )
+      .addSubcommand(subCommand =>
+        subCommand
+          .setName('announce_channel')
+          .setDescription('Set the channel the bot uses to announce ticks and reports')
+          .addChannelOption(option =>
+            option.setName('announce').setDescription('The channel to announce to').setRequired(true)
+          )
+      )
   }
 
   async execInteraction(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -109,6 +118,8 @@ export class Guild implements SlashedCommand {
       }
     } else if (subCommand === 'theme') {
       await interaction.reply({ content: await this.changeTheme(interaction), ephemeral: true })
+    } else if (subCommand === 'announce_channel') {
+      await interaction.reply({ content: await this.setAnnounceChannel(interaction), ephemeral: true })
     } else {
       await interaction.reply({ content: Responses.getResponse(Responses.NOTACOMMAND), ephemeral: true })
     }
@@ -214,6 +225,27 @@ export class Guild implements SlashedCommand {
     const theme = interaction.options.getString('theme')
 
     if (!(await GuildModel.findOneAndUpdate({ guild_id: guild.guild_id }, { updated_at: new Date(), theme }).exec())) {
+      return Responses.getResponse(Responses.FAIL)
+    }
+
+    return Responses.getResponse(Responses.SUCCESS)
+  }
+
+  async setAnnounceChannel(interaction: ChatInputCommandInteraction): Promise<string> {
+    const guild = await readGuild(interaction.guild)
+    const channelOpt = interaction.options.getChannel('announce')
+
+    const channel = interaction.guild.channels.cache.get(channelOpt.id)
+    if (channel.type !== ChannelType.GuildText || !channel) {
+      return Responses.getResponse(Responses.NOTATEXTCHANNEL)
+    }
+
+    if (
+      !(await GuildModel.findOneAndUpdate(
+        { guild_id: guild.guild_id },
+        { updated_at: new Date(), bgs_channel_id: channel.id }
+      ).exec())
+    ) {
       return Responses.getResponse(Responses.FAIL)
     }
 
