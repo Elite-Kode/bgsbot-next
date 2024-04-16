@@ -14,6 +14,7 @@ import { EBGSSystemsDetailed, FieldRecordSchema } from '../../interfaces/typings
 import { FdevIds } from '../../fdevids'
 import { DateHelpers } from '../../dateHelpers'
 import { readGuild } from '../../db/guild'
+import { StringHelpers } from '../../stringHelpers'
 
 export class SystemStatus implements SlashedCommand {
   name = 'system'
@@ -124,7 +125,7 @@ export class SystemStatus implements SlashedCommand {
         pendingStates = 'None'
       } else {
         pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
-          const trend = this.getTrendIcon(pendingState.trend)
+          const trend = StringHelpers.getTrendIcon(pendingState.trend)
           pendingStates = `${pendingStates}${fdevIds.state[pendingState.state].name}${trend}`
           if (index !== factionPendingStates.length - 1) {
             pendingStates = `${pendingStates}, `
@@ -137,7 +138,7 @@ export class SystemStatus implements SlashedCommand {
         recoveringStates = 'None'
       } else {
         recoveringStatesArray.forEach((recoveringState, index, factionRecoveringState) => {
-          const trend = this.getTrendIcon(recoveringState.trend)
+          const trend = StringHelpers.getTrendIcon(recoveringState.trend)
           recoveringStates = `${recoveringStates}${fdevIds.state[recoveringState.state].name}${trend}`
           if (index !== factionRecoveringState.length - 1) {
             recoveringStates = `${recoveringStates}, `
@@ -215,15 +216,5 @@ export class SystemStatus implements SlashedCommand {
   // Method is deprecated
   help(): [string, string, string, string[]] {
     return ['', '', '', []]
-  }
-
-  private getTrendIcon(trend: number): string {
-    if (trend > 0) {
-      return '⬆️'
-    } else if (trend < 0) {
-      return '⬇️'
-    } else {
-      return '↔️'
-    }
   }
 }
