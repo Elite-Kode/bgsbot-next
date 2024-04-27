@@ -12,4 +12,14 @@ export class StringHelpers {
       return '↔️'
     }
   }
+
+  public static influenceDifferenceText(influenceDifference: number): string {
+    if (influenceDifference > 0) {
+      return `📈${(influenceDifference * 100).toFixed(1)}%`;
+    } else if (influenceDifference < 0) {
+      return `📉${(-influenceDifference * 100).toFixed(1)}%`;
+    } else {
+      return `🔷${(influenceDifference * 100).toFixed(1)}%`;
+    }
+  }
 }

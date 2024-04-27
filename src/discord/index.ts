@@ -1,5 +1,5 @@
 import { ChatInputCommandInteraction, Client, Events, GatewayIntentBits, Message } from 'discord.js'
-import { Hi, Tick, Guild, Chart, FactionStatus, SystemStatus } from './commands'
+import { Hi, Tick, Guild, Chart, FactionStatus, SystemStatus, Report } from './commands'
 import { Command, SlashedCommand } from '../interfaces/Command'
 import { Responses } from './responseDict'
 import { RegisterSlashCommands } from './adminCommands'
@@ -43,7 +43,15 @@ export class DiscordClient {
   }
 
   private initiateCommands(): void {
-    const commands = [new Hi(), new Tick(), new Guild(), new Chart(), new FactionStatus(), new SystemStatus()]
+    const commands = [
+      new Hi(),
+      new Tick(),
+      new Guild(),
+      new Chart(),
+      new FactionStatus(),
+      new SystemStatus(),
+      new Report()
+    ]
 
     this.registerCommands(commands)
 

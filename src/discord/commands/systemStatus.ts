@@ -30,6 +30,7 @@ export class SystemStatus implements SlashedCommand {
       )
   }
 
+  // TODO: This is a mess. Refactor.
   async execInteraction(interaction: ChatInputCommandInteraction): Promise<void> {
     if (!(await Access.has(interaction.user, interaction.guild, AccessLevel.ACCESS))) {
       await interaction.reply({ content: Responses.getResponse(Responses.INSUFFICIENTPERMS), ephemeral: true })
@@ -93,14 +94,7 @@ export class SystemStatus implements SlashedCommand {
       const activeStatesArray = faction.faction_details.faction_presence.active_states
       const pendingStatesArray = faction.faction_details.faction_presence.pending_states
       const recoveringStatesArray = faction.faction_details.faction_presence.recovering_states
-      let influenceDifferenceText
-      if (influenceDifference > 0) {
-        influenceDifferenceText = `📈${(influenceDifference * 100).toFixed(1)}%`
-      } else if (influenceDifference < 0) {
-        influenceDifferenceText = `📉${(-influenceDifference * 100).toFixed(1)}%`
-      } else {
-        influenceDifferenceText = `🔷${(influenceDifference * 100).toFixed(1)}%`
-      }
+      const influenceDifferenceText = StringHelpers.influenceDifferenceText(influenceDifference)
       let factionDetail = `Last Updated : ${DateHelpers.timeDifference(
         updateDate,
         new Date()
