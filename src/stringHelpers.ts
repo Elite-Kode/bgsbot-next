@@ -22,4 +22,8 @@ export class StringHelpers {
       return `🔷${(influenceDifference * 100).toFixed(1)}%`;
     }
   }
+
+  public static beforeAfterSuffix(reference: Date, other: Date): string {
+    return other.getTime() > reference.getTime() ? 'after' : 'before'
+  }
 }
