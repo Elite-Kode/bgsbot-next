@@ -15,15 +15,19 @@ export class StringHelpers {
 
   public static influenceDifferenceText(influenceDifference: number): string {
     if (influenceDifference > 0) {
-      return `📈${(influenceDifference * 100).toFixed(1)}%`;
+      return `📈${(influenceDifference * 100).toFixed(1)}%`
     } else if (influenceDifference < 0) {
-      return `📉${(-influenceDifference * 100).toFixed(1)}%`;
+      return `📉${(-influenceDifference * 100).toFixed(1)}%`
     } else {
-      return `🔷${(influenceDifference * 100).toFixed(1)}%`;
+      return `🔷${(influenceDifference * 100).toFixed(1)}%`
     }
   }
 
   public static beforeAfterSuffix(reference: Date, other: Date): string {
     return other.getTime() > reference.getTime() ? 'after' : 'before'
+  }
+
+  public static acronym(text: string): string {
+    return text.split(/\s/).reduce((acc, word) => acc + word.charAt(0), '')
   }
 }

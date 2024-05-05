@@ -85,9 +85,9 @@ export class ReportHelpers {
   ): Promise<string> {
     let workingString = ``
 
-    workingString += `Active States : ${await ReportHelpers.generateStateString(activeStates)}\n`
-    workingString += `Pending States : ${await ReportHelpers.generateStateTrendString(pendingStates)}\n`
-    workingString += `Recovering States : ${await ReportHelpers.generateStateTrendString(recoveringStates)}`
+    workingString += `Active States: ${await ReportHelpers.generateStateString(activeStates)}\n`
+    workingString += `Pending States: ${await ReportHelpers.generateStateTrendString(pendingStates)}\n`
+    workingString += `Recovering States: ${await ReportHelpers.generateStateTrendString(recoveringStates)}`
 
     return workingString
   }

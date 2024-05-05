@@ -1,11 +1,5 @@
 import { SlashedCommand } from '../../interfaces/Command'
-import {
-  ChatInputCommandInteraction,
-  EmbedBuilder,
-  Message,
-  PermissionsBitField,
-  SlashCommandBuilder
-} from 'discord.js'
+import { ChatInputCommandInteraction, Message, PermissionsBitField, SlashCommandBuilder } from 'discord.js'
 import { Responses } from '../responseDict'
 import { Access, AccessLevel } from '../access'
 import axios, { AxiosRequestConfig } from 'axios'
@@ -119,7 +113,7 @@ export class FactionStatus implements SlashedCommand {
       fieldRecords = ReportHelpers.sortByGuildPreference(fieldRecords, guild.sort_order, guild.sort)
     }
 
-    await Pagination.paginateAndRespond(interaction, fieldRecords, factionName, government)
+    await Pagination.paginateAndRespond(interaction, fieldRecords, factionName, government, 'Faction Status', 24)
   }
 
   async execMessage(message: Message, commandArguments: string): Promise<void> {

@@ -96,13 +96,13 @@ export class SystemStatus implements SlashedCommand {
       const recoveringStates = faction.faction_details.faction_presence.recovering_states
       const influenceDifferenceText = StringHelpers.influenceDifferenceText(influenceDifference)
 
-      let factionDetail = `Last Updated : ${DateHelpers.timeDifference(
-        updateDate,
-        new Date()
-      )}, ${DateHelpers.timeSince(tickDate, updateDate)} ${suffix} last detected tick \n`
-      factionDetail += `State : ${state}\n`
+      let factionDetail = `Last Updated: ${DateHelpers.timeDifference(updateDate, new Date())}, ${DateHelpers.timeSince(
+        tickDate,
+        updateDate
+      )} ${suffix} last detected tick \n`
+      factionDetail += `State: ${state}\n`
       factionDetail += `Happiness: ${happiness}\n`
-      factionDetail += `Influence : ${(influence * 100).toFixed(1)}%${influenceDifferenceText}\n`
+      factionDetail += `Influence: ${(influence * 100).toFixed(1)}%${influenceDifferenceText}\n`
 
       factionDetail += ReportHelpers.generateStateStrings(activeStates, pendingStates, recoveringStates)
 
@@ -135,7 +135,7 @@ export class SystemStatus implements SlashedCommand {
       embed.addFields({ name: field.fieldTitle, value: field.fieldDescription })
     }
 
-    await Pagination.paginateAndRespond(interaction, fieldRecords, systemName, systemState)
+    await Pagination.paginateAndRespond(interaction, fieldRecords, systemName, systemState, 'Faction Status', 24)
   }
 
   async execMessage(message: Message, commandArguments: string): Promise<void> {
