@@ -6,15 +6,6 @@ export class Responses {
     'Oops! problem... :frowning:',
     'Eeek! problems :frowning:'
   ]
-  public static readonly NOPARAMS = [
-    'Um...I think you are forgetting something',
-    'I need more details to work on',
-    'Yeah...go on!'
-  ]
-  public static readonly TOOMANYPARAMS = [
-    'Aaah...thats too many details!',
-    'No need to hurry. Give me the details one by one'
-  ]
   public static readonly NOTACOMMAND = [
     'Um...were you trying to give me a command? If so you may be using the wrong one',
     "Sorry, I couldn't find that command"
@@ -31,6 +22,7 @@ export class Responses {
   ]
   public static readonly USESLASH = ['Please use the slash command instead!']
   public static readonly ALREADYADDED = ['This has already been added', 'Already added! Try something else']
+  public static readonly NOTFOUND = ["I couldn't find that in the database", "Nope, can't find that one"]
 
   public static getResponse(action: string[]): string {
     return action[Math.floor(Math.random() * action.length)]
