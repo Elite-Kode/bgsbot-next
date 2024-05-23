@@ -10,12 +10,15 @@ export class Pagination {
     title: string,
     fieldsPerPage: number
   ) {
-    const numberOfMessages = Math.ceil(fieldRecords.length / 24)
+    const numberOfMessages = Math.ceil(fieldRecords.length / fieldsPerPage)
+    console.log(`Paginating over ${numberOfMessages} messages (${fieldRecords.length})`)
     for (let index = 0; index < numberOfMessages; index++) {
       const embed = new EmbedBuilder()
       embed.setTitle(`${title} - ${index + 1} of ${numberOfMessages}`)
       embed.setColor([255, 0, 255])
-      embed.addFields({ name: firstFieldName, value: firstFieldValue })
+      if (firstFieldName !== '' && firstFieldValue !== '') {
+        embed.addFields({ name: firstFieldName, value: firstFieldValue })
+      }
       embed.setTimestamp(new Date())
       let limit = 0
       if (fieldRecords.length > index * fieldsPerPage + fieldsPerPage) {
@@ -23,7 +26,7 @@ export class Pagination {
       } else {
         limit = fieldRecords.length
       }
-      for (let recordIndex = index * 24; recordIndex < limit; recordIndex++) {
+      for (let recordIndex = index * fieldsPerPage; recordIndex < limit; recordIndex++) {
         embed.addFields({
           name: fieldRecords[recordIndex].fieldTitle,
           value: fieldRecords[recordIndex].fieldDescription
