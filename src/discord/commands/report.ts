@@ -8,11 +8,11 @@ import {
 } from 'discord.js'
 import { Responses } from '../responseDict'
 import { Tick } from './tick'
-import { readGuild } from '../../db/guild'
+import { GuildModel, readGuild } from '../../db/guild'
 import { Access, AccessLevel } from '../access'
 import { FdevIds } from '../../fdevids'
 import axios, { AxiosRequestConfig } from 'axios'
-import { EBGSFactions, EBGSSystemsDetailed, FieldRecordSchema } from '../../interfaces/typings'
+import { EBGSFactions, EBGSFactionsMinimal, EBGSSystemsDetailed, FieldRecordSchema } from '../../interfaces/typings'
 import { ReportHelpers } from '../../reportHelpers'
 import { StringHelpers } from '../../stringHelpers'
 import { DateHelpers } from '../../dateHelpers'
@@ -28,13 +28,30 @@ export class Report implements SlashedCommand {
       .setName(this.name)
       .setDescription(this.description)
       .addSubcommand(subcommand => subcommand.setName('generate').setDescription('Generate a BGS report'))
+      .addSubcommandGroup(subcommandGroup =>
+        subcommandGroup
+          .setName('faction')
+          .setDescription('Faction report settings')
+          .addSubcommand(subcommand =>
+            subcommand
+              .setName('add')
+              .setDescription('Add a faction to the report')
+              .addStringOption(option => option.setName('faction').setDescription('The faction to add').setRequired(true))
+              .addBooleanOption(option => option.setName('primary').setDescription('Primary?').setRequired(true))
+          )
+      )
   }
 
   async execInteraction(interaction: ChatInputCommandInteraction): Promise<void> {
     const subcommand = interaction.options.getSubcommand()
+    const subcommandGroup = interaction.options.getSubcommandGroup()
 
     if (subcommand === 'generate') {
       await this.generateEmbed(interaction)
+    } else if (subcommandGroup === 'faction') {
+      if (subcommand === 'add') {
+        await this.addFaction(interaction)
+      }
     }
   }
 
@@ -291,6 +308,59 @@ export class Report implements SlashedCommand {
       })
 
       await Pagination.paginateAndRespond(interaction, fields, '', '', 'BGS Report', 10)
+    }
+  }
+
+  async addFaction(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!(await Access.has(interaction.user, interaction.guild, AccessLevel.ADMIN))) {
+      await interaction.reply({ content: Responses.getResponse(Responses.INSUFFICIENTPERMS), ephemeral: true })
+      return
+    }
+
+    const faction = interaction.options.getString('faction')
+    const primary = interaction.options.getBoolean('primary')
+
+    const url = 'https://elitebgs.app/api/ebgs/v5/factions'
+    const requestOptions: AxiosRequestConfig = {
+      params: {
+        name: faction,
+        minimal: true
+      }
+    }
+
+    await interaction.deferReply({ ephemeral: true })
+    const response = await axios.get(url, requestOptions)
+
+    if (response.status !== 200) {
+      await interaction.editReply({ content: Responses.getResponse(Responses.FAIL) })
+      return
+    }
+
+    const body: EBGSFactionsMinimal = response.data
+    if (body.total === 0) {
+      await interaction.editReply({ content: Responses.getResponse(Responses.NOTFOUND) })
+      return
+    }
+
+    const responseFaction = body.docs[0]
+    const factionName = responseFaction.name
+    const monitorFactions = {
+      primary,
+      faction_name: factionName,
+      faction_name_lower: factionName.toLowerCase()
+    }
+
+    const guild = await readGuild(interaction.guild)
+
+    try {
+      await GuildModel.findOneAndUpdate(
+        { guild_id: guild.guild_id },
+        { updated_at: new Date(), $addToSet: { monitor_factions: monitorFactions } }
+      )
+
+      await interaction.editReply({ content: Responses.getResponse(Responses.SUCCESS) })
+    } catch {
+      await interaction.editReply({ content: Responses.getResponse(Responses.FAIL) })
     }
   }
 }
