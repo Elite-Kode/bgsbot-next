@@ -36,7 +36,9 @@ export class Report implements SlashedCommand {
             subcommand
               .setName('add')
               .setDescription('Add a faction to the report')
-              .addStringOption(option => option.setName('faction').setDescription('The faction to add').setRequired(true))
+              .addStringOption(option =>
+                option.setName('faction').setDescription('The faction to add').setRequired(true)
+              )
               .addBooleanOption(option => option.setName('primary').setDescription('Primary?').setRequired(true))
           )
       )
