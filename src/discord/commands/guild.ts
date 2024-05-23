@@ -113,15 +113,11 @@ export class Guild implements SlashedCommand {
         await interaction.reply({ embeds: [await this.listRoles(interaction)], ephemeral: true })
       } else if (subCommand === 'remove') {
         await interaction.reply({ content: await this.removeRole(interaction), ephemeral: true })
-      } else {
-        await interaction.reply({ content: Responses.getResponse(Responses.NOTACOMMAND), ephemeral: true })
       }
     } else if (subCommand === 'theme') {
       await interaction.reply({ content: await this.changeTheme(interaction), ephemeral: true })
     } else if (subCommand === 'announce_channel') {
       await interaction.reply({ content: await this.setAnnounceChannel(interaction), ephemeral: true })
-    } else {
-      await interaction.reply({ content: Responses.getResponse(Responses.NOTACOMMAND), ephemeral: true })
     }
   }
 
