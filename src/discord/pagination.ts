@@ -10,6 +10,26 @@ export class Pagination {
     title: string,
     fieldsPerPage: number
   ) {
+    const embeds = this.generateEmbeds(fieldRecords, firstFieldName, firstFieldValue, title, fieldsPerPage)
+
+    for (let i = 0; i < embeds.length; i++) {
+      if (i === 0) {
+        await interaction.editReply({ embeds: [embeds[i]] })
+      } else {
+        await interaction.followUp({ embeds: [embeds[i]] })
+      }
+    }
+  }
+
+  public static generateEmbeds(
+    fieldRecords: FieldRecordSchema[],
+    firstFieldName: string,
+    firstFieldValue: string,
+    title: string,
+    fieldsPerPage: number
+  ): EmbedBuilder[] {
+    const embeds: EmbedBuilder[] = []
+
     const numberOfMessages = Math.ceil(fieldRecords.length / fieldsPerPage)
     console.log(`Paginating over ${numberOfMessages} messages (${fieldRecords.length})`)
     for (let index = 0; index < numberOfMessages; index++) {
@@ -33,11 +53,9 @@ export class Pagination {
         })
       }
 
-      if (index === 0) {
-        await interaction.editReply({ embeds: [embed] })
-      } else {
-        await interaction.followUp({ embeds: [embed] })
-      }
+      embeds.push(embed)
     }
+
+    return embeds
   }
 }

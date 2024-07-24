@@ -1,6 +1,6 @@
 import { SlashedCommand } from '../../interfaces/Command'
 import {
-  ChatInputCommandInteraction,
+  ChatInputCommandInteraction, EmbedBuilder,
   Message,
   PermissionsBitField,
   SlashCommandBuilder,
@@ -8,11 +8,17 @@ import {
 } from 'discord.js'
 import { Responses } from '../responseDict'
 import { Tick } from './tick'
-import { GuildModel, readGuild } from '../../db/guild'
+import { GuildModel, readGuild, Guild } from '../../db/guild'
 import { Access, AccessLevel } from '../access'
 import { FdevIds } from '../../fdevids'
 import axios, { AxiosRequestConfig } from 'axios'
-import { EBGSFactions, EBGSFactionsMinimal, EBGSSystemsDetailed, FieldRecordSchema } from '../../interfaces/typings'
+import {
+  EBGSFactions,
+  EBGSFactionsMinimal,
+  EBGSSystemsDetailed,
+  EBGSSystemsMinimal,
+  FieldRecordSchema
+} from '../../interfaces/typings'
 import { ReportHelpers } from '../../reportHelpers'
 import { StringHelpers } from '../../stringHelpers'
 import { DateHelpers } from '../../dateHelpers'
@@ -41,6 +47,40 @@ export class Report implements SlashedCommand {
               )
               .addBooleanOption(option => option.setName('primary').setDescription('Primary?').setRequired(true))
           )
+          .addSubcommand(subcommand =>
+            subcommand
+              .setName('remove')
+              .setDescription('Remove a faction from the report')
+              .addStringOption(option =>
+                option.setName('faction').setDescription('The faction to remove').setRequired(true)
+              )
+          )
+          .addSubcommand(subcommand =>
+            subcommand.setName('list').setDescription('List the factions monitored in the report')
+          )
+      )
+      .addSubcommandGroup(subcommandGroup =>
+        subcommandGroup
+          .setName('system')
+          .setDescription('System report settings')
+          .addSubcommand(subcommand =>
+            subcommand
+              .setName('add')
+              .setDescription('Add a system to the report')
+              .addStringOption(option => option.setName('system').setDescription('The system to add').setRequired(true))
+              .addBooleanOption(option => option.setName('primary').setDescription('Primary?').setRequired(true))
+          )
+          .addSubcommand(subcommand =>
+            subcommand
+              .setName('remove')
+              .setDescription('Remove a system from the report')
+              .addStringOption(option =>
+                option.setName('faction').setDescription('The system to remove').setRequired(true)
+              )
+          )
+          .addSubcommand(subcommand =>
+            subcommand.setName('list').setDescription('List the systems monitored in the report')
+          )
       )
   }
 
@@ -53,6 +93,18 @@ export class Report implements SlashedCommand {
     } else if (subcommandGroup === 'faction') {
       if (subcommand === 'add') {
         await this.addFaction(interaction)
+      } else if (subcommand === 'remove') {
+        await this.removeFaction(interaction)
+      } else if (subcommand === 'list') {
+        await this.listFactions(interaction)
+      }
+    } else if (subcommandGroup === 'system') {
+      if (subcommand === 'add') {
+        await this.addSystem(interaction)
+      } else if (subcommand === 'remove') {
+        await this.removeSystem(interaction)
+      } else if (subcommand === 'list') {
+        await this.listSystems(interaction)
       }
     }
   }
@@ -81,8 +133,19 @@ export class Report implements SlashedCommand {
 
     await interaction.deferReply({ ephemeral: false })
 
+    try {
+      const guild = await readGuild(interaction.guild)
+      const fields = await this.generateFields(guild)
+
+      await Pagination.paginateAndRespond(interaction, fields, '', '', 'BGS Report', 10)
+    } catch (e) {
+      console.log(e)
+      await interaction.editReply(Responses.getResponse(Responses.FAIL))
+    }
+  }
+
+  async generateFields(guild: Guild) {
     const tick = await new Tick().getTickData()
-    const guild = await readGuild(interaction.guild)
     const fdevIds = await FdevIds.getIds()
 
     const primaryFactions = guild.monitor_factions.filter(v => v.primary).map(v => v.faction_name)
@@ -111,7 +174,7 @@ export class Report implements SlashedCommand {
         const response = await axios.get(url, requestOptions)
 
         if (response.status !== 200) {
-          await interaction.editReply(Responses.getResponse(Responses.FAIL))
+          console.log("response status wasn't 200")
           error = true
           return
         }
@@ -234,8 +297,8 @@ export class Report implements SlashedCommand {
       const response = await axios.get(url, requestOptions)
 
       if (response.status !== 200) {
-        await interaction.editReply(Responses.getResponse(Responses.FAIL))
-        return
+        console.log("response status wasn't 200")
+        throw 'failed request'
       }
 
       const body: EBGSFactions = response.data
@@ -308,9 +371,9 @@ export class Report implements SlashedCommand {
         influence: 0,
         name: previousSystem
       })
-
-      await Pagination.paginateAndRespond(interaction, fields, '', '', 'BGS Report', 10)
     }
+
+    return fields
   }
 
   async addFaction(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -318,6 +381,7 @@ export class Report implements SlashedCommand {
       await interaction.reply({ content: Responses.getResponse(Responses.INSUFFICIENTPERMS), ephemeral: true })
       return
     }
+    await interaction.deferReply({ ephemeral: true })
 
     const faction = interaction.options.getString('faction')
     const primary = interaction.options.getBoolean('primary')
@@ -330,7 +394,6 @@ export class Report implements SlashedCommand {
       }
     }
 
-    await interaction.deferReply({ ephemeral: true })
     const response = await axios.get(url, requestOptions)
 
     if (response.status !== 200) {
@@ -346,7 +409,7 @@ export class Report implements SlashedCommand {
 
     const responseFaction = body.docs[0]
     const factionName = responseFaction.name
-    const monitorFactions = {
+    const monitorFaction = {
       primary,
       faction_name: factionName,
       faction_name_lower: factionName.toLowerCase()
@@ -357,12 +420,189 @@ export class Report implements SlashedCommand {
     try {
       await GuildModel.findOneAndUpdate(
         { guild_id: guild.guild_id },
-        { updated_at: new Date(), $addToSet: { monitor_factions: monitorFactions } }
+        { updated_at: new Date(), $addToSet: { monitor_factions: monitorFaction } }
       )
 
       await interaction.editReply({ content: Responses.getResponse(Responses.SUCCESS) })
     } catch {
       await interaction.editReply({ content: Responses.getResponse(Responses.FAIL) })
     }
+  }
+
+  async removeFaction(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!(await Access.has(interaction.user, interaction.guild, AccessLevel.ADMIN))) {
+      await interaction.reply({ content: Responses.getResponse(Responses.INSUFFICIENTPERMS), ephemeral: true })
+      return
+    }
+    await interaction.deferReply({ ephemeral: true })
+
+    const faction = interaction.options.getString('faction')
+    const guild = await readGuild(interaction.guild)
+
+    try {
+      await GuildModel.findOneAndUpdate(
+        { guild_id: guild.guild_id },
+        { updated_at: new Date(), $pull: { monitor_factions: { faction_name_lower: faction.toLowerCase() } } }
+      )
+
+      await interaction.editReply({ content: Responses.getResponse(Responses.SUCCESS) })
+    } catch {
+      await interaction.editReply({ content: Responses.getResponse(Responses.FAIL) })
+    }
+  }
+
+  async listFactions(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!(await Access.has(interaction.user, interaction.guild, AccessLevel.ACCESS))) {
+      await interaction.reply({ content: Responses.getResponse(Responses.INSUFFICIENTPERMS), ephemeral: true })
+      return
+    }
+    await interaction.deferReply({ ephemeral: true })
+
+    const guild = await readGuild(interaction.guild)
+
+    if (guild.monitor_factions.length === 0) {
+      await interaction.editReply({ content: Responses.getResponse(Responses.ZEROLENGTH) })
+      return
+    }
+
+    const embed = new EmbedBuilder()
+    embed.setTitle('Monitored Factions')
+    embed.setColor([255, 0, 255])
+
+    let factionString = ''
+    for (const faction of guild.monitor_factions) {
+      factionString += '- '
+      factionString += faction.faction_name
+
+      if (faction.primary) {
+        factionString += ' | Primary'
+      }
+
+      factionString += '\n'
+    }
+
+    embed.addFields({ name: 'Factions', value: factionString })
+    embed.setTimestamp(new Date())
+
+    await interaction.editReply({ embeds: [embed] })
+  }
+
+  async addSystem(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!(await Access.has(interaction.user, interaction.guild, AccessLevel.ADMIN))) {
+      await interaction.reply({ content: Responses.getResponse(Responses.INSUFFICIENTPERMS), ephemeral: true })
+      return
+    }
+    await interaction.deferReply({ ephemeral: true })
+
+    const system = interaction.options.getString('system')
+    const primary = interaction.options.getBoolean('primary')
+
+    const url = 'https://elitebgs.app/api/ebgs/v5/systems'
+    const requestOptions: AxiosRequestConfig = {
+      params: {
+        name: system,
+        minimal: true
+      }
+    }
+
+    const response = await axios.get(url, requestOptions)
+
+    if (response.status !== 200) {
+      await interaction.editReply({ content: Responses.getResponse(Responses.FAIL) })
+      return
+    }
+
+    const body: EBGSSystemsMinimal = response.data
+    if (body.total === 0) {
+      await interaction.editReply({ content: Responses.getResponse(Responses.NOTFOUND) })
+      return
+    }
+
+    const responseSystem = body.docs[0]
+    const systemName = responseSystem.name
+    const monitorSystem = {
+      primary,
+      system_name: systemName,
+      system_name_lower: systemName.toLowerCase(),
+      system_pos: {
+        x: responseSystem.x,
+        y: responseSystem.y,
+        z: responseSystem.z
+      }
+    }
+
+    const guild = await readGuild(interaction.guild)
+
+    try {
+      await GuildModel.findOneAndUpdate(
+        { guild_id: guild.guild_id },
+        {
+          updated_at: new Date(),
+          $addToSet: { monitor_systems: monitorSystem }
+        }
+      )
+
+      await interaction.editReply({ content: Responses.getResponse(Responses.SUCCESS) })
+    } catch {
+      await interaction.editReply({ content: Responses.getResponse(Responses.FAIL) })
+    }
+  }
+
+  async removeSystem(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!(await Access.has(interaction.user, interaction.guild, AccessLevel.ADMIN))) {
+      await interaction.reply({ content: Responses.getResponse(Responses.INSUFFICIENTPERMS), ephemeral: true })
+      return
+    }
+    await interaction.deferReply({ ephemeral: true })
+
+    const system = interaction.options.getString('system')
+    const guild = await readGuild(interaction.guild)
+
+    try {
+      await GuildModel.findOneAndUpdate(
+        { guild_id: guild.guild_id },
+        { updated_at: new Date(), $pull: { monitor_systems: { system_name_lower: system.toLowerCase() } } }
+      )
+
+      await interaction.editReply({ content: Responses.getResponse(Responses.SUCCESS) })
+    } catch {
+      await interaction.editReply({ content: Responses.getResponse(Responses.FAIL) })
+    }
+  }
+
+  async listSystems(interaction: ChatInputCommandInteraction): Promise<void> {
+    if (!(await Access.has(interaction.user, interaction.guild, AccessLevel.ACCESS))) {
+      await interaction.reply({ content: Responses.getResponse(Responses.INSUFFICIENTPERMS), ephemeral: true })
+      return
+    }
+    await interaction.deferReply({ ephemeral: true })
+
+    const guild = await readGuild(interaction.guild)
+
+    if (guild.monitor_systems.length === 0) {
+      await interaction.editReply({ content: Responses.getResponse(Responses.ZEROLENGTH) })
+      return
+    }
+
+    const embed = new EmbedBuilder()
+    embed.setTitle('Monitored Systems')
+    embed.setColor([255, 0, 255])
+
+    let systemString = ''
+    for (const system of guild.monitor_systems) {
+      systemString += '- '
+      systemString += system.system_name
+
+      if (system.primary) {
+        systemString += ' | Primary'
+      }
+
+      systemString += '\n'
+    }
+
+    embed.addFields({ name: 'Systems', value: systemString })
+    embed.setTimestamp(new Date())
+
+    await interaction.editReply({ embeds: [embed] })
   }
 }

@@ -1,4 +1,5 @@
 import { PaginateResult } from 'mongoose'
+import { CronJob } from 'cron'
 
 interface EBGSFactionPresence {
   system_id: string
@@ -309,3 +310,11 @@ export interface IngameIdsSchema {
   station: any
   happiness: any
 }
+
+export interface CronJobStoreSchema {
+  cronJob: CronJob
+  guild_id: string
+  time: string
+}
+
+export type CronJobStore = CronJobStoreSchema

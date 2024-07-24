@@ -3,6 +3,8 @@ import { DiscordClient } from './discord'
 import { DB } from './db'
 import { FdevIds } from './fdevids'
 import { TickDetector } from './tickDetector'
+import { AutoReport } from './autoReport'
+import { GuildModel } from './db/guild'
 
 class App {
   public discordClient: DiscordClient
@@ -20,6 +22,9 @@ class App {
     await this.db.connectToDB()
     await this.generateFdevIds()
     await this.tickDetector.connectSocket()
+
+    const guilds = await GuildModel.find()
+    AutoReport.loadJobs(guilds, this.discordClient.client)
   }
 
   private generateFdevIds() {
