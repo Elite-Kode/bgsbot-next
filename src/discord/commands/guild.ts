@@ -10,6 +10,7 @@ import {
 import { Responses } from '../responseDict'
 import { Access, AccessLevel } from '../access'
 import { GuildModel, readGuild } from '../../db/guild'
+import { AutoReport } from '../../autoReport'
 
 export class Guild implements SlashedCommand {
   name = 'guild'
@@ -244,6 +245,8 @@ export class Guild implements SlashedCommand {
     ) {
       return Responses.getResponse(Responses.FAIL)
     }
+
+    AutoReport.updateEntry(guild, interaction.client)
 
     return Responses.getResponse(Responses.SUCCESS)
   }

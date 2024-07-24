@@ -14,7 +14,7 @@ export class Pagination {
     const embeds = this.generateEmbeds(fieldRecords, firstFieldName, firstFieldValue, title, fieldsPerPage)
 
     if (embeds.length === 0) {
-      await interaction.editReply({content: Responses.getResponse(Responses.NOTFOUND)})
+      await interaction.editReply({ content: Responses.getResponse(Responses.NOTFOUND) })
     }
 
     for (let i = 0; i < embeds.length; i++) {

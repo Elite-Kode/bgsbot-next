@@ -7,7 +7,7 @@ import { CronJob } from 'cron'
 import { Responses } from './discord/responseDict'
 
 export class AutoReport {
-  private static jobs: CronJobStore[]
+  private static jobs: CronJobStore[] = []
 
   /*
   Populates the array with cron jobs for configured guilds
@@ -29,7 +29,7 @@ export class AutoReport {
   }
 
   /*
-  Updates the guid's cronjob entry. Call this after changing the guild's settings
+  Updates the guid's cronjob entry. Call this after changing the guild's settings e.g. report time, sort mode, or channel
    */
   public static updateEntry(guild: Guild, client: Client) {
     if (!guild.bgs_time || guild.bgs_time.length === 0 || !guild.bgs_channel_id || guild.bgs_channel_id.length === 0) {
