@@ -23,6 +23,7 @@ import { ReportHelpers } from '../../reportHelpers'
 import { StringHelpers } from '../../stringHelpers'
 import { DateHelpers } from '../../dateHelpers'
 import { Pagination } from '../pagination'
+import { AutoReport } from '../../autoReport'
 
 export class Report implements SlashedCommand {
   name = 'report'
@@ -34,6 +35,18 @@ export class Report implements SlashedCommand {
       .setName(this.name)
       .setDescription(this.description)
       .addSubcommand(subcommand => subcommand.setName('generate').setDescription('Generate a BGS report'))
+      .addSubcommand(subcommand =>
+        subcommand
+          .setName('enable')
+          .setDescription('Enable auto reporting')
+          .addNumberOption(option => option.setName('hour').setDescription('Hour').setMinValue(0).setMaxValue(23).setRequired(true))
+          .addNumberOption(option => option.setName('minute').setDescription('Minute').setMinValue(0).setMaxValue(59).setRequired(true))
+          .addNumberOption(option => option.setName('second').setDescription('Second').setMinValue(0).setMaxValue(59).setRequired(true))
+      )
+      .addSubcommand(subcommand =>
+        subcommand
+          .setName('disable')
+          .setDescription('Disable auto reporting'))
       .addSubcommandGroup(subcommandGroup =>
         subcommandGroup
           .setName('faction')
@@ -90,6 +103,49 @@ export class Report implements SlashedCommand {
 
     if (subcommand === 'generate') {
       await this.generateEmbed(interaction)
+    } if (subcommand === 'enable') {
+      if (!(await Access.has(interaction.user, interaction.guild, AccessLevel.ADMIN))) {
+        await interaction.reply({ content: Responses.getResponse(Responses.INSUFFICIENTPERMS), ephemeral: true })
+        return
+      }
+
+      await interaction.deferReply({ephemeral: true})
+
+      const guild = await readGuild(interaction.guild)
+
+      if (!guild.bgs_channel_id || guild.bgs_channel_id === '') {
+        await interaction.editReply({ content: Responses.getResponse(Responses.NOBGSCHANNEL) })
+        return
+      }
+
+      const hour = interaction.options.getNumber('hour').toString().padStart(2, '0')
+      const minute = interaction.options.getNumber('minute').toString().padStart(2, '0')
+      const second = interaction.options.getNumber('second').toString().padStart(2, '0')
+
+      GuildModel.findOneAndUpdate(
+        { guild_id: guild.guild_id },
+        {
+          updated_at: new Date(),
+          bgs_time: `${hour}:${minute}:${second}`,
+        }
+      )
+
+      guild.bgs_time = `${hour}:${minute}:${second}`
+      AutoReport.updateEntry(guild, interaction.client)
+
+      await interaction.editReply({ content: Responses.getResponse(Responses.SUCCESS) })
+    } if (subcommand === 'disable') {
+      if (!(await Access.has(interaction.user, interaction.guild, AccessLevel.ADMIN))) {
+        await interaction.reply({ content: Responses.getResponse(Responses.INSUFFICIENTPERMS), ephemeral: true })
+        return
+      }
+
+      await interaction.deferReply({ ephemeral: true })
+
+      const guild = await readGuild(interaction.guild)
+      AutoReport.deleteEntry(guild)
+
+      await interaction.editReply({ content: Responses.getResponse(Responses.SUCCESS) })
     } else if (subcommandGroup === 'faction') {
       if (subcommand === 'add') {
         await this.addFaction(interaction)

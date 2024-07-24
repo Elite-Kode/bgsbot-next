@@ -66,6 +66,17 @@ export class AutoReport {
     cronJob.start()
   }
 
+  public static deleteEntry(guild: Guild) {
+    const index = this.jobs.findIndex(element => {
+      return element.guild_id === guild.guild_id
+    })
+
+    if (index === -1) {
+      this.jobs[index].cronJob.stop()
+      this.jobs.splice(index, 1)
+    }
+  }
+
   /*
   This method is called by each cron job to generate the report and post an appropriate message
    */

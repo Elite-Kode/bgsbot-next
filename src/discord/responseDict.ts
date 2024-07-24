@@ -24,6 +24,7 @@ export class Responses {
   public static readonly ALREADYADDED = ['This has already been added', 'Already added! Try something else']
   public static readonly NOTFOUND = ["I couldn't find that in the database", "Nope, can't find that one"]
   public static readonly ZEROLENGTH = ["Nothing stored i'm afraid", "Got a list but it's empty!"]
+  public static readonly NOBGSCHANNEL = ["There isn't a BGS channel configured, so I can't setup the report!", "Configure a BGS channel first"]
 
   public static getResponse(action: string[]): string {
     return action[Math.floor(Math.random() * action.length)]
