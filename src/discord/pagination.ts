@@ -1,5 +1,6 @@
 import { FieldRecordSchema } from '../interfaces/typings'
 import { ChatInputCommandInteraction, EmbedBuilder } from 'discord.js'
+import { Responses } from './responseDict'
 
 export class Pagination {
   public static async paginateAndRespond(
@@ -11,6 +12,10 @@ export class Pagination {
     fieldsPerPage: number
   ) {
     const embeds = this.generateEmbeds(fieldRecords, firstFieldName, firstFieldValue, title, fieldsPerPage)
+
+    if (embeds.length === 0) {
+      await interaction.editReply({content: Responses.getResponse(Responses.NOTFOUND)})
+    }
 
     for (let i = 0; i < embeds.length; i++) {
       if (i === 0) {
